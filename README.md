@@ -23,7 +23,26 @@ e Walmes Zeviani (LEG/DEST).
 
 ## Tópicos
 
-Tópicos e datas vão aqui (e linkar materiais).
+  1. Configuração do ambiente e estruturas de programação (WB).
+     1. Download e instalação do Python e editores.
+     2. Módulos, aritmética, lógica, objetos.
+     3. Controle de execução, fluxo e funções.
+  2. Estatística descritiva, probabilidade e inferência (WB)
+     1. Medidas descritivas.
+     2. Cálculo de probabilidades.
+     3. Inferência estatística.
+  3. Manipulação e visualização de dados (WZ).
+     1. Leitura de dados no formato texto.
+     2. Curadoria e organização dos dados.
+     3. Manipulação de dados (split-apply-combine).
+     4. Visualização de dados.
+  4. Álgebra matricial e otimização (WB).
+     1. Operações matriciais, decomposições.
+     2. Otimização convexa.
+     3. Otimização com restrições.
+  5. Modelagem estatística (WZ).
+     1. Modelos de regressão.
+     2. Modelos de machine learning.
 
 ## Referências
 
