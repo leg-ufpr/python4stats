@@ -8,8 +8,8 @@ algoritmos, lógica de programação e estrutura de dados em Python,
 manipulação e visualização de dados, estatística descritiva, ajuste de
 modelos de regressão e de aprendizado de máquina.
 
-O Curso acontecerá em 5 módulos de 2 horas cada nos dias 14, 16, 19, 21
-e 23 de Janeiro de 2018, no período das 14h às 16h no Laboratório de
+O Curso acontecerá em 5 módulos de 2 horas cada nos dias 15, 17, 19, 22
+e 24 de Janeiro de 2018, no período das 14h às 16h no Laboratório de
 Estatística e Geoinformação (LEG, prédio do Setor de Ciências Exatas,
 sala 232).
 
