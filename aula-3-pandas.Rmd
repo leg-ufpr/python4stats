@@ -1,0 +1,551 @@
+---
+title: "Manipulação de Visualização de Dados"
+subtitle: "Grupo de Estudos de Python para Análise de Dados"
+author: "Walmes Zeviani"
+output:
+  html_document:
+    theme: flatly
+    toc: true
+    number_sections: true
+---
+
+# Tabela de conteúdo
+
+  1. Habilitar Python no Emacs
+     1. `.emacs` e pacotes.
+     2. path para o Anaconda Python
+  2. Introdução ao Pandas.
+     1. Classes `Series` e `DataFrame`.
+     2. Iniciando objetos das classes.
+     3. Acesso as propriedades e métodos.
+     4. Indexação e seleção.
+     5. Modificação de conteúdo.
+     6. Modificação de atributos.
+  3. Manipulação de dados.
+     1. Datasets internos do Python.
+     2. Filtros e ordenação.
+     3. Criar e excluir registros e variáveis.
+     4. Empilhar e fundir tabelas.
+     5. Estatística descritiva.
+     6. Estatísticas por estrato.
+  4. Leitura de arquivos de dados.
+     1. Com separador de campo: CSV e TSV.
+     2. De campo de comprimento fixo.
+     3. Planilhas eletrônicas.
+  5. Visualização de dados.
+     1. Modelo mental do Python.
+
+# Python dentro do Emacs
+
+As instruções a seguir são para habilitação minimalista do Python dentro
+do emacs.
+
+Instale o pacote `elpy` no seu Emacs. De dentro de uma sessão emacs faça
+`M-x package-list-packages`. Em seguida, procure pelo `elpy` com `C-s
+elpy`. Com o cursor nessa linha, pressione `i` para selecionar o pacote
+para instalação e `x` para executar a instalação. Aguarde até o final do
+processo.
+
+Coloque no seu arquivo `.emacs` o seguinte conteúdo.
+
+```{lisp, eval = FALSE}
+;;----------------------------------------------------------------------
+;; Python configuration.
+
+;; Install first: M-x package-list-packages C-s elpy.
+(elpy-enable)
+
+;; Define o interpretador Python.
+(custom-set-variables
+ ;; '(python-shell-interpreter "~/anaconda/bin/python3")
+ '(python-shell-interpreter "/usr/bin/python3")
+ )
+
+;; Habilita autocomplete após os pontos.
+(setq jedi:complete-on-dot t)
+
+;; Python3 console, C-c C-p para abrir o console
+(defcustom python-shell-interpreter "python3"
+  "Default Python interpreter for shell."
+  :type 'string
+  :group 'python)
+
+;;----------------------------------------------------------------------
+```
+
+A partir de agora, quando abrir arquivos `.py`, o modo Python
+(`python-mode`) estará operando. Faça `C-RET` para avaliar uma linha ou
+região selecionada. Na primeira execução o console Python será aberto em
+um buffer paralelo.
+
+# Configuração para usar Python com Rmarkdown
+
+Indicar o caminho para o interpretador Python no primeiro chunk.
+
+```{r setup, include = TRUE}
+# Usa o Python 3.x para processar os chunks.
+knitr::opts_chunk$set(
+    engine.path = "/usr/bin/python3")
+```
+
+Verificar se a versão vista ao processar o documento é de fato a versão
+pretendida.
+
+```{python}
+# Exibe a versão da engine Python sendo usada.
+import sys
+print(sys.version)
+```
+
+No caso de ausência de pacotes, executar em terminal shell as instruções
+abaixo para instalação dos pacotes.
+
+```
+# Instala pacotes no Python 3.x.
+sudo apt-get install python3-pip
+sudo pip3 install numpy scipy pandas matplotlib scikit-learn
+sudo apt-get install python3-tk
+
+# Para instalar o Jupyter e o Spyder.
+sudo pip3 install jupyter
+sudo pip3 install spyder
+```
+
+Varificar se os gráficos estão sendo inseridos dentro do documento.
+
+```{python}
+# Importa bibliotecas gráficas.
+import matplotlib as mpl
+import matplotlib.pyplot as plt
+
+# Cria um gráfico simples.
+plt.plot([1,2,3,4])
+plt.show()
+```
+
+Segundo discussão no [issues/812] do repositório do rmarkdown, é
+possível usar o Python fornecido pelo Anaconda.
+
+IMPORTANTE: estar com a última versão do pacote `rmarkdown`. Instalar a
+versão disponível no github.  É necessário instalar o pacote
+`reticulate` que é chamado quando a engine é Python.
+
+```{r, eval = FALSE}
+devtools::install_github("rstudio/rmarkdown")
+install.packages("reticulate")
+```
+
+# Introdução ao Pandas
+
+O tipo "primitivo" de objeto fornecido pelo Pandas é o [`Series`]. Nada
+mais é que o nome para um vetor de dados. Ele é contruido a partir do
+`numpy.array()`.
+
+```{python}
+# Importa o módulo.
+import pandas as pd
+
+# Exibe a documentação.
+# help(pd.Series)
+
+# Criando um objeto tipo Series.
+s = pd.Series(range(10))
+print(s)
+
+# Atributos da classe (não termina com parênteses.)
+print(s.dtype)
+print(s.nbytes)
+print(s.shape)
+print(s.values)
+
+type(s)
+
+# (funções) Métodos associadas a classe.
+# ATTENTION: mostrar recursos de REGEX do Emacs para colocar o print().
+s.min()
+s.max()
+s.mean()
+s.median()
+s.std()
+s.head(3)
+s.tail(3)
+s.describe()
+```
+
+O [`DataFrame`] é o tipo de objeto que representa a tabela de dados. Ele é
+contruído a partir do `Series`.
+
+```{python}
+# Dicionário com listas de mesmo tamanho.
+d = {'grr': [1, 2, 3, 4],
+     'nome': ["Andre", "Gabriela", "Rodrigo", "Tatiana"],
+     'nota': [9.0, 9.2, 7.9, 8.3]}
+d
+
+# Conversão para DataFrame.
+df = pd.DataFrame(data = d)
+df
+
+# Atributos.
+df.shape  # Comprimento em cada dimensão.
+df.size   # Número de entradas.
+df.axes   # Nome dos eixos.
+df.values # Representação NumPy.
+df.dtypes # Tipagem de cada coluna.
+
+# Acesso as `Series`. Pelo nome não pode haver espaços.
+df.grr
+df.nome
+df.nota
+
+# Pelo nome dos índices. Permite mais de uma coluna.
+df[['nota']]
+df[['nota', 'nome']]
+
+# Por sequência de posições.
+df.iloc[:,1:3]
+
+# Seleção de linhas (três formas equivalentes).
+df.iloc[1:3]
+df.iloc[1:3,]
+df.iloc[1:3,:]
+
+# Seleção de linhas e colunas.
+df.iloc[1:3, 0:2]
+# df.iloc[1:3, ['nome', 'grr']]
+df.iloc[1:3, ][['nome', 'grr']]
+
+# Retonar o nome das colunas.
+df.columns
+df.columns[-2] # É uma lista.
+df.columns[[0, 2]] # É uma lista.
+
+# Usar as opções combinadas (passando a lista).
+df.iloc[1:3, ][df.columns[-2]]
+
+df[[0, 2]]
+df.iloc[:, [0, 2]]
+df.iloc[[0, 2], [0, 2]]
+df.iloc[[0, 2]]
+df.iloc[[0, 2],]
+df.iloc[[0, 2],:]
+
+x = range(0, 3, 2)
+df.iloc[x,:]
+df.iloc[0:3:2,:]
+
+# Com intervalo dado pelo nome dos extremos.
+df.loc[:, 'grr':'nota']
+
+# Dar nome para as linhas.
+df = df.set_index('grr')
+df
+
+# `grr` deixou de ser uma coluna para der o ID.
+df.columns
+
+# Restaura o índice e retorna `grr` como coluna.
+df.reset_index(inplace = True)
+df.columns
+
+# Usa nome como índice dos registros.
+df = df.set_index('nome')
+df.columns
+df
+
+# Seleciona linhas pelo nome do índice.
+df.loc["Andre"]
+df.loc["Tatiana"]
+
+# Pela posição.
+df.iloc[0]
+df.iloc[-1]
+
+# Mudar o nome das colunas.
+df.columns = ['Grr', 'Nota']
+df
+
+df.rename(columns = {'Grr': 'GRR',
+                     'Nota': 'nota'},
+          inplace = True)
+df
+
+# Estrutura do DataFrame.
+df.info()
+
+# Medidas descritivas para variáveis numéricas.
+df.describe()
+
+# Restaura o índice.
+df.reset_index(inplace = True)
+df
+
+# Adiciona um registro ao final da tabela (usa dict).
+df = pd.DataFrame(data = d)
+df
+df = df.append({'grr': 5, 'nota': 10, 'nome': 'Pedro', 'falta': 6},
+               ignore_index = True)
+df
+
+df = df.append(pd.DataFrame({'grr': [6, 7], 'nota': [10, 9], 'nome':
+                             ['Maicon', 'Maria'], 'falta': [6, 0]}),
+               ignore_index = True)
+df
+
+# Exclui o registro pelo índice.
+df.drop([3], inplace = True)
+df
+
+dg = pd.DataFrame([[99, 'Carolina', 9.5, 8],
+                   [98, 'Lígia', 7.1, 10]],
+                  columns = ['grr', 'nome', 'nota', 'falta'])
+dg
+
+# Empilha duas tabelas.
+df.append(dg)
+df.append(dg, ignore_index = True)
+df
+dg
+
+# Remove uma colunas.
+df.drop(['falta'], axis = 1)
+df
+
+# Criando uma coluna.
+df.falta = pd.Series([10, 0, 4, 2, 18, 16],
+                     index = df.index)
+df
+```
+
+# Manipulação de dados
+
+```{r, eval = FALSE}
+u <- "http://leg.ufpr.br/~walmes/data/triathlon.txt"
+download.file(u, destfile = basename(u))
+getwd()
+dir()
+```
+
+## Importação de TSV
+
+```{python}
+# Lendo um TSV.
+cap = pd.read_table('http://leg.ufpr.br/~walmes/data/desfolha.txt')
+
+# Informações.
+cap.info()
+
+# Exibe a tabela.
+cap
+
+# Medidas descritivas para as variáveis numéricas.
+cap.describe()
+
+# Descrição pelo tipo de variável.
+cap.describe(include = 'int')
+cap.describe(include = 'float')
+cap.describe(include = ['int', 'float'])
+cap.describe(include = 'object')
+cap.describe(include = 'all')
+```
+
+## Medidas descritivas por estrato
+
+```{python}
+# Média por estrato.
+cap.groupby(['estag'])['pcapu'].mean()
+cap.groupby(['estag'])['pcapu', 'ncapu'].mean()
+cap.groupby(['estag', 'desf'])['pcapu', 'ncapu'].mean()
+cap.groupby(['estag', 'desf'])['pcapu', 'ncapu'].describe()
+
+capg = cap.groupby(['estag', 'desf'])
+capg
+
+# Médias de duas variáveis.
+m = cap.groupby(['estag'])['pcapu', 'ncapu'].mean()
+m
+m.reset_index(inplace = True)
+m
+
+# Máximo de uma outra variável,
+M = cap.groupby(['estag'])['alt'].max()
+M
+M = pd.DataFrame(M)
+M.reset_index(inplace = True)
+M
+
+pd.merge(m, M, on = ['estag'])
+```
+
+## Função com medidas descritivas
+
+```{python}
+import numpy as np
+
+cap.groupby(['estag'])['pcapu'].agg({
+    "media" : np.mean,
+    "errpd" : np.std,
+    "ampli" : lambda x: np.max(x) - np.min(x),
+    "cv" : lambda x: 100 * np.std(x)/np.mean(x)
+})
+
+res = cap.groupby(['estag', 'desf'])['pcapu', 'alt'].agg({
+    "media" : np.mean,
+    "errpd" : np.std
+})
+res
+
+# Organização do objeto.
+res.info()
+
+# Atributos de linhas e colunas são MultiIndex.
+res.columns
+res.columns.levels
+res.index
+res.index.levels
+
+res.reset_index()
+```
+
+## Filtros
+
+```{python}
+#--------------------------------------------
+# Máscaras lógicas.
+
+cap[cap.alt > 150]
+cap[cap['alt'] > 150]
+
+# IMPORTANT: tem que ter os parenteses.
+cap[(cap.alt > 150) & ((cap.ncapu >= 10) | (cap.nnos > 30))]
+
+#--------------------------------------------
+# Partições feitas com o groupby().
+
+# Com uma variável de agrupamento.
+gb = cap.groupby(['estag'])
+gb
+gb.groups
+
+gb.get_group('1veg')
+gb.get_group('5capu')
+
+pd.concat([gb.get_group('1veg'),
+           gb.get_group('5capu')])
+
+# Com duas variáveis de agrupamento.
+gb = cap.groupby(['estag', 'desf'])
+gb
+
+gb.groups
+
+# Tem que usar uma tupla.
+gb.get_group(('1veg', 0))
+gb.get_group(('5capu', 100))
+
+pd.concat([gb.get_group(('1veg', 0)),
+           gb.get_group(('5capu', 100))])
+```
+
+## Ordenação
+
+```{python}
+cap.sort_values(['alt'], ascending = False).head(10)
+cap.sort_values(['ncapu', 'alt']).head(10)
+```
+
+## Junção de tabelas
+
+```{python}
+tabA = pd.DataFrame({
+    'nome': ["Marcos", "Julia", "Gabriel"],
+    'nota': [8.9, 6.7, 8.1]
+})
+
+tabB = pd.DataFrame({
+    'nome': ["Ulisses", "Andrea", "Ana", "Pedro"],
+    'nota': [7.7, 7.1, 8.3, 5.0]
+})
+
+tabC = pd.DataFrame({
+    'falta': [10, 12, 4, 0],
+    'idade': [18, 20, 18, 19]
+})
+tabC.index = [0, 1, 3, 4] # Index com falha.
+
+#--------------------------------------------
+# Empilhar.
+
+# Usando append().
+tabA.append(tabB)
+tabA.append(tabB, ignore_index = True)
+
+# Usando concat().
+pd.concat([tabA, tabB], axis = 0)
+pd.concat([tabA, tabB], axis = 0, ignore_index = True)
+
+#--------------------------------------------
+# Lado a lado.
+
+pd.concat([tabB, tabC], axis = 1)
+
+#--------------------------------------------
+# De formato long para wide e vice versa.
+
+tab_wide = pd.DataFrame({
+    'trat'  : ["A", "B", "C"],
+    'aval1' : [1, 2, 3],
+    'aval2' : [10, 20, 30],
+    'aval3' : [100, 200, 300]
+})
+tab_wide
+
+tab_long = pd.melt(tab_wide,
+                   id_vars = ['trat'],
+                   var_name = 'x',
+                   value_name = 'y')
+tab_long
+
+# Para complicar, vamos remover uma linha.
+tab_long.drop([3], axis = 0, inplace = True)
+
+tab_wide = tab_long.pivot(index = 'trat',
+                          columns = 'x',
+                          values = 'y')
+tab_wide.reset_index(inplace = True)
+tab_wide
+```
+
+# Acesso a documentação interna em PDF
+
+```{sh, eval = FALSE}
+pydoc3 -p 1234 # Abre o navegador na home da documentação.
+```
+
+# Referências
+
+  1. Livros
+     1. Dale, K. (2016). *Data visualization with Python and JavaScript:
+        scrape, clean, explore & transform your data*. Sebastopol, CA:
+        O'Reilly Media.  Homepage:
+        <http://shop.oreilly.com/product/0636920037057.do>.  Source
+        code: <https://github.com/Kyrand/dataviz-with-python-and-js>.
+     2. Massaron, L. & Mueller, J. (2015). *Python for data science for
+        dummies*. Hoboken, NJ: John Wiley and Sons, Inc.  Homepage:
+        <https://www.wiley.com/en-us/Python+for+Data+Science+For+Dummies-p-9781118844182>.
+        Source code:
+        <https://media.wiley.com/product_ancillary/81/11188441/DOWNLOAD/844182-Source-Code-10-25-2016.zip>
+  2. Webpages
+     1. Chris Albon webpage: <https://chrisalbon.com/#python>.
+     2. <https://pandas.pydata.org/pandas-docs/stable/tutorials.html>.
+     3. <https://pandas.pydata.org/pandas-docs/stable/merging.html>.
+  3. Cheat sheets
+     2. <https://github.com/pandas-dev/pandas/blob/master/doc/cheatsheet/Pandas_Cheat_Sheet.pdf>
+     3. <https://s3.amazonaws.com/assets.datacamp.com/blog_assets/Python_Pandas_Cheat_Sheet_2.pdf>
+     4. <https://s3.amazonaws.com/quandl-static-content/Documents/Quandl+-+Pandas,+SciPy,+NumPy+Cheat+Sheet.pdf>
+     5. <http://www.webpages.uidaho.edu/~stevel/504/Pandas%20DataFrame%20Notes.pdf>
+
+<!------------------------------------------- -->
+[`Series`]: https://pandas.pydata.org/pandas-docs/stable/generated/pandas.Series.html
+[`DataFrame`]: https://pandas.pydata.org/pandas-docs/stable/generated/pandas.Series.html
+[issues/812]: https://github.com/rstudio/rmarkdown/issues/812
